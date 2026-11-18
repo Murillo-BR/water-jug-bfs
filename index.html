@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Solve the Water Jug Problem with Breadth-First Search (BFS). A classical Artificial Intelligence state-space search demonstration.">
+  <title>Water Jug Problem | BFS Interactive Demo</title>
+  <style>
+    :root { color-scheme: dark; font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; background: #0b1324; color: #edf3ff; }
+    .page { max-width: 960px; padding: 50px 20px 72px; margin: auto; }
+    .eyebrow { color: #80c8f4; font-weight: 700; letter-spacing: .12em; font-size: .8rem; text-transform: uppercase; }
+    h1 { font-size: clamp(2rem, 5vw, 3rem); line-height: 1.12; margin: 14px 0 14px; }
+    .lead { color: #b4c2d8; line-height: 1.65; max-width: 720px; }
+    .panel { border: 1px solid #30405d; border-radius: 18px; background: #14213a; padding: 25px; margin-top: 26px; }
+    h2 { font-size: 1.2rem; margin: 0 0 14px; }
+    .form { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 15px; align-items: end; }
+    label { display: grid; gap: 8px; font-size: .88rem; color: #cad7eb; font-weight: 600; }
+    input { width: 100%; padding: 11px 12px; color: white; background: #0c182e; border: 1px solid #506181; border-radius: 10px; font: inherit; }
+    input:focus-visible, button:focus-visible { outline: 2px solid #8bd5ff; outline-offset: 2px; }
+    button { background: #7bd3f6; color: #092339; border: 0; padding: 12px 21px; border-radius: 10px; font: inherit; font-weight: 800; cursor: pointer; margin-top: 18px; }
+    button:hover { background: #a8e4ff; }
+    .note { color: #a3b3cf; font-size: .85rem; margin: 14px 0 0; }
+    .status { background: #1a3b45; color: #a4f4d6; border: 1px solid #357a74; border-radius: 12px; padding: 12px 14px; font-weight: 700; margin: 0 0 20px; }
+    .status.error { background: #493039; color: #ffe4e5; border-color: #965c6c; }
+    .jugs { display: flex; gap: 34px; justify-content: center; flex-wrap: wrap; padding: 16px 0 8px; }
+    .jug-container { display: flex; align-items: center; flex-direction: column; gap: 12px; }
+    .jug { width: 116px; height: 156px; position: relative; border: 4px solid #b5c8da; border-top: 0; border-radius: 4px 4px 17px 17px; overflow: hidden; background: #0c182e; }
+    .water { position: absolute; bottom: 0; height: 0; background: linear-gradient(#86d8ff, #268dcd); width: 100%; transition: height .25s; }
+    .jug-value { position: absolute; inset: 0; display: grid; place-items: center; font-weight: 800; font-size: 1.3rem; color: white; text-shadow: 0 1px 4px #123350; }
+    .jug-name { color: #d4e6fa; font-size: .95rem; font-weight: 700; }
+    ol { list-style: none; padding: 0; display: grid; gap: 8px; }
+    li { display: flex; gap: 10px; align-items: center; justify-content: space-between; flex-wrap: wrap; padding: 12px 14px; border-radius: 9px; background: #0e1a2d; border: 1px solid #263c56; }
+    li:last-child { border-color: #438e89; }
+    .action { color: #e0ebfc; }
+    .pair { color: #8de1ff; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-weight: 800; }
+    .explanation { font-size: .94rem; line-height: 1.7; color: #b4c2d8; }
+    a { color: #90d9ff; }
+    @media(max-width: 580px) { .page { padding-top: 32px; } .form { grid-template-columns: 1fr; } .panel { padding: 18px; } }
+  </style>
+</head>
+<body>
+<main class="page">
+  <p class="eyebrow">Classical AI · State-space search</p>
+  <h1>Water Jug Problem</h1>
+  <p class="lead">An interactive demonstration of <strong>Breadth-First Search (BFS)</strong>. Set two jug capacities and a target amount, then find the shortest sequence of filling, emptying, and pouring operations.</p>
+
+  <section class="panel" aria-labelledby="settings-title">
+    <h2 id="settings-title">Problem settings</h2>
+    <form id="settings" novalidate>
+      <div class="form">
+        <label>Jug A capacity (liters)<input id="capA" type="number" min="1" max="100" step="1" value="4" required></label>
+        <label>Jug B capacity (liters)<input id="capB" type="number" min="1" max="100" step="1" value="3" required></label>
+        <label>Target (liters)<input id="target" type="number" min="0" max="100" step="1" value="2" required></label>
+      </div>
+      <button type="submit">Find shortest solution</button>
+    </form>
+    <p class="note">Each state is (water in A, water in B). The goal is to obtain exactly the target amount in either jug. Both start empty.</p>
+  </section>
+
+  <section class="panel" aria-labelledby="solution-title">
+    <h2 id="solution-title">BFS solution</h2>
+    <div id="status" role="status" class="status" aria-live="polite">Ready to search.</div>
+    <div class="jugs" aria-label="Final jug water levels">
+      <div class="jug-container">
+        <div class="jug"><div id="waterA" class="water"></div><div id="valueA" class="jug-value">0 / 4 L</div></div>
+        <span class="jug-name">Jug A</span>
+      </div>
+      <div class="jug-container">
+        <div class="jug"><div id="waterB" class="water"></div><div id="valueB" class="jug-value">0 / 3 L</div></div>
+        <span class="jug-name">Jug B</span>
+      </div>
+    </div>
+    <ol id="steps" aria-label="Sequence of operations"></ol>
+  </section>
+
+  <section class="panel explanation">
+    <h2>How it works</h2>
+    <p>BFS explores states in increasing order of the number of operations. It uses a queue to track unexplored states and a visited set to avoid repetitions. The six allowed operations are: fill A, fill B, empty A, empty B, pour A into B, and pour B into A.</p>
+    <p>Because each operation costs one move, the first goal state found yields a shortest path. The algorithm reconstructs the exact sequence by following the previous-state links.</p>
+    <p><a href="https://en.wikipedia.org/wiki/Water_pouring_puzzle" target="_blank" rel="noopener noreferrer">Reference: Water pouring puzzle</a></p>
+  </section>
+</main>
+<script src="src/waterJug.js"></script>
+<script>
+  'use strict';
+  const form = document.getElementById('settings');
+  const status = document.getElementById('status');
+  const steps = document.getElementById('steps');
+  function updateJug(id, amount, capacity) {
+    document.getElementById('water' + id).style.height = (100 * amount / capacity) + '%';
+    document.getElementById('value' + id).textContent = `${amount} / ${capacity} L`;
+  }
+  function run(event) {
+    if (event) event.preventDefault();
+    const a = Number(document.getElementById('capA').value);
+    const b = Number(document.getElementById('capB').value);
+    const target = Number(document.getElementById('target').value);
+    steps.replaceChildren();
+    if (![a, b, target].every(Number.isSafeInteger) || a < 1 || b < 1 || a > 100 || b > 100 || target < 0 || target > 100) {
+      status.className = 'status error';
+      status.textContent = 'Enter whole-number capacities from 1 to 100 and a target from 0 to 100.';
+      return;
+    }
+    const path = window.WaterJug.solveWaterJug(a, b, target);
+    status.className = path === null ? 'status error' : 'status';
+    status.textContent = path === null ? 'No solution exists for these capacities and target.' : `Goal reached in ${path.length - 1} move${path.length === 2 ? '' : 's'}!`;
+    const final = path === null ? { a: 0, b: 0 } : path[path.length - 1];
+    updateJug('A', final.a, a);
+    updateJug('B', final.b, b);
+    if (path === null) return;
+    for (let i = 0; i < path.length; i++) {
+      const step = path[i];
+      const item = document.createElement('li');
+      const action = document.createElement('span');
+      action.className = 'action';
+      action.textContent = `Step ${i}: ${step.action}`;
+      const pair = document.createElement('span');
+      pair.className = 'pair';
+      pair.textContent = `(${step.a}, ${step.b})`;
+      item.append(action, pair);
+      steps.append(item);
+    }
+  }
+  form.addEventListener('submit', run);
+  run();
+</script>
+</body>
+</html>

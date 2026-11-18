@@ -1,0 +1,15 @@
+{
+  "name": "water-jug-bfs",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Classical AI state-space search using breadth-first search to solve the water jug puzzle.",
+  "main": "src/waterJug.js",
+  "scripts": {
+    "start": "node src/waterJug.js",
+    "test": "node tests/waterJug.test.js"
+  },
+  "engines": {
+    "node": ">=16"
+  },
+  "license": "MIT"
+}
